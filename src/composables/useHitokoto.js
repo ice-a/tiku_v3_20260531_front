@@ -1,0 +1,52 @@
+import { ref } from 'vue';
+
+const hitokoto = ref({ text: '加载中...', from: '', from_who: '' });
+const loading = ref(false);
+const CACHE_KEY = 'hitokoto_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 分钟
+
+const defaultHitokoto = {
+  text: '生活不止眼前的苟且，还有诗和远方。',
+  from: '高晓松',
+  from_who: '',
+};
+
+export function useHitokoto() {
+  async function fetchHitokoto(forceRefresh = false) {
+    // 检查缓存
+    if (!forceRefresh) {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_TTL) {
+            hitokoto.value = data;
+            return;
+          }
+        } catch {}
+      }
+    }
+
+    loading.value = true;
+    try {
+      const res = await fetch('https://v1.hitokoto.cn/');
+      const data = await res.json();
+      hitokoto.value = {
+        text: data.hitokoto || defaultHitokoto.text,
+        from: data.from || '',
+        from_who: data.from_who || '',
+      };
+      // 保存缓存
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data: hitokoto.value,
+        timestamp: Date.now(),
+      }));
+    } catch {
+      hitokoto.value = defaultHitokoto;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  return { hitokoto, loading, fetchHitokoto };
+}

@@ -1,0 +1,387 @@
+<template>
+  <div class="question-detail" v-if="question">
+    <!-- 题目信息 -->
+    <a-card :loading="loading">
+      <template #title>
+        <a-space>
+          <a-tag>{{ question.category }}</a-tag>
+          <a-tag :color="difficultyColor(question.difficulty)">
+            {{ difficultyLabel(question.difficulty) }}
+          </a-tag>
+          <a-tag v-for="tag in question.tags" :key="tag">{{ tag }}</a-tag>
+        </a-space>
+      </template>
+      <template #extra>
+        <a-space>
+          <a-button @click="handleFavorite" :type="isFavorite ? 'primary' : 'default'">
+            {{ isFavorite ? '已收藏' : '收藏' }}
+          </a-button>
+          <a-button @click="handleShare">分享</a-button>
+          <a-button @click="showFeedbackModal = true">反馈</a-button>
+          <a-tooltip :title="aiEnabled ? '' : '请先在 AI 配置中启用 AI'">
+            <a-button
+              @click="handleAiAnswer"
+              :loading="aiAnswerLoading"
+              :disabled="!aiEnabled"
+            >
+              AI 获取答案
+            </a-button>
+          </a-tooltip>
+        </a-space>
+      </template>
+
+      <div class="question-text">
+        <h3>题干</h3>
+        <p>{{ question.text }}</p>
+      </div>
+
+      <a-divider />
+
+      <div class="question-answer">
+        <h3>参考答案</h3>
+        <template v-if="showAnswer">
+          <p class="answer-text">{{ question.answer }}</p>
+          <a-button type="link" size="small" @click="showAnswer = false">隐藏答案</a-button>
+        </template>
+        <template v-else>
+          <a-button type="dashed" block @click="showAnswer = true">
+            查看答案
+          </a-button>
+        </template>
+      </div>
+
+      <!-- AI 生成答案区域 -->
+      <div v-if="showAiAnswer && aiAnswer" class="ai-answer-section">
+        <div class="ai-answer-header">
+          <a-tag color="purple">AI 生成</a-tag>
+          <a-button type="link" size="small" @click="showAiAnswer = false">收起</a-button>
+        </div>
+        <p class="ai-answer-text">{{ aiAnswer }}</p>
+        <a-space>
+          <a-button type="primary" size="small" @click="adoptAiAnswer" :loading="adoptLoading">
+            采纳为答案
+          </a-button>
+          <a-button size="small" @click="showAiAnswer = false">忽略</a-button>
+        </a-space>
+      </div>
+
+      <a-descriptions bordered size="small" style="margin-top: 16px" :column="{ xs: 1, sm: 2 }">
+        <a-descriptions-item label="浏览次数">{{ question.stats?.views || 0 }}</a-descriptions-item>
+        <a-descriptions-item label="答题次数">{{ question.stats?.attempts || 0 }}</a-descriptions-item>
+        <a-descriptions-item label="正确次数">{{ question.stats?.correctAttempts || 0 }}</a-descriptions-item>
+        <a-descriptions-item label="正确率">
+          {{ question.stats?.attempts ? Math.round((question.stats.correctAttempts / question.stats.attempts) * 100) : 0 }}%
+        </a-descriptions-item>
+      </a-descriptions>
+    </a-card>
+
+    <!-- 练习答题区域 -->
+    <a-card title="练习答题" style="margin-top: 16px">
+      <a-textarea
+        v-model:value="userAnswer"
+        placeholder="请输入你的答案..."
+        :rows="4"
+        :disabled="practiceSubmitted"
+      />
+      <div style="margin-top: 12px; display: flex; gap: 8px">
+        <a-button type="primary" @click="handlePractice" :loading="practiceLoading" :disabled="practiceSubmitted || !userAnswer.trim()">
+          提交答案
+        </a-button>
+        <a-button @click="handleAiScore" :loading="aiLoading" :disabled="practiceSubmitted || !userAnswer.trim()">
+          AI 评分
+        </a-button>
+        <a-button @click="resetPractice" :disabled="!practiceSubmitted">
+          重新答题
+        </a-button>
+      </div>
+
+      <!-- 练习结果 -->
+      <a-result
+        v-if="practiceResult"
+        :status="practiceResult.isCorrect ? 'success' : 'info'"
+        :title="practiceResult.isCorrect ? '回答正确!' : '回答有误'"
+        style="margin-top: 16px"
+      >
+        <template #subTitle v-if="practiceResult.aiScore !== undefined">
+          <p>AI 评分: {{ practiceResult.aiScore }} 分</p>
+          <p>{{ practiceResult.aiAnalysis }}</p>
+        </template>
+      </a-result>
+    </a-card>
+
+    <!-- 分享图片预览 -->
+    <a-modal v-model:open="showShareModal" title="分享题目" :footer="null">
+      <img v-if="shareImageUrl" :src="shareImageUrl" alt="分享图片" style="width: 100%" />
+      <a-spin v-else />
+    </a-modal>
+
+    <!-- 反馈弹窗 -->
+    <a-modal
+      v-model:open="showFeedbackModal"
+      title="提交反馈"
+      @ok="handleFeedback"
+      :confirm-loading="feedbackLoading"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="反馈类型">
+          <a-select v-model:value="feedbackType" placeholder="请选择反馈类型">
+            <a-select-option value="error_report">答案/内容错误</a-select-option>
+            <a-select-option value="suggestion">建议/其他</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="反馈内容">
+          <a-textarea v-model:value="feedbackContent" placeholder="请描述问题..." :rows="3" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+  </div>
+
+  <a-spin v-else-if="loading" style="display: block; margin: 100px auto" />
+
+  <a-result v-else status="404" title="题目不存在" sub-title="请检查题目 ID 是否正确">
+    <template #extra>
+      <a-button type="primary" @click="$router.push('/tiku')">返回列表</a-button>
+    </template>
+  </a-result>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { message } from 'ant-design-vue';
+import { useAuthStore } from '../stores/auth';
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api.js';
+
+const route = useRoute();
+const authStore = useAuthStore();
+
+const question = ref(null);
+const loading = ref(false);
+const showAnswer = ref(false);
+const userAnswer = ref('');
+const practiceSubmitted = ref(false);
+const practiceLoading = ref(false);
+const aiLoading = ref(false);
+const practiceResult = ref(null);
+const isFavorite = ref(false);
+const showShareModal = ref(false);
+const shareImageUrl = ref('');
+const showFeedbackModal = ref(false);
+const feedbackType = ref(undefined);
+const feedbackContent = ref('');
+const feedbackLoading = ref(false);
+
+// AI answer state
+const aiEnabled = ref(false);
+const aiAnswer = ref('');
+const aiAnswerLoading = ref(false);
+const showAiAnswer = ref(false);
+const adoptLoading = ref(false);
+
+function difficultyColor(d) {
+  const map = { easy: 'green', medium: 'orange', hard: 'red' };
+  return map[d] || 'default';
+}
+
+function difficultyLabel(d) {
+  const map = { easy: '简单', medium: '中等', hard: '困难' };
+  return map[d] || d;
+}
+
+async function fetchQuestion() {
+  loading.value = true;
+  try {
+    const data = await apiGet(`/api/questions/${route.params.id}`);
+    question.value = data.question;
+  } catch {
+    // ignore
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function fetchAiConfigStatus() {
+  if (!authStore.isAuthenticated) return;
+  try {
+    const data = await apiGet('/api/users/ai-config');
+    aiEnabled.value = !!data.aiConfig?.enabled;
+  } catch {
+    // ignore
+  }
+}
+
+async function handleAiAnswer() {
+  aiAnswerLoading.value = true;
+  try {
+    const data = await apiPost(`/api/questions/${route.params.id}/ai-answer`, {});
+    aiAnswer.value = data.answer;
+    showAiAnswer.value = true;
+  } catch {
+    message.error('AI 生成答案失败');
+  } finally {
+    aiAnswerLoading.value = false;
+  }
+}
+
+async function adoptAiAnswer() {
+  adoptLoading.value = true;
+  try {
+    await apiPut(`/api/questions/${route.params.id}`, { answer: aiAnswer.value });
+    question.value.answer = aiAnswer.value;
+    showAiAnswer.value = false;
+    message.success('已采纳 AI 答案');
+  } catch {
+    message.error('采纳答案失败');
+  } finally {
+    adoptLoading.value = false;
+  }
+}
+
+async function handlePractice() {
+  if (!authStore.isAuthenticated) {
+    message.warning('请先登录');
+    return;
+  }
+  practiceLoading.value = true;
+  try {
+    const data = await apiPost(`/api/questions/${route.params.id}/practice`, { userAnswer: userAnswer.value });
+    practiceSubmitted.value = true;
+    practiceResult.value = { isCorrect: data.isCorrect };
+  } catch {
+    // ignore
+  } finally {
+    practiceLoading.value = false;
+  }
+}
+
+async function handleAiScore() {
+  if (!authStore.isAuthenticated) {
+    message.warning('请先登录');
+    return;
+  }
+  aiLoading.value = true;
+  try {
+    const data = await apiPost(`/api/questions/${route.params.id}/ai-score`, { userAnswer: userAnswer.value });
+    practiceSubmitted.value = true;
+    practiceResult.value = {
+      isCorrect: data.score >= 60,
+      aiScore: data.score,
+      aiAnalysis: data.analysis,
+    };
+  } catch {
+    message.error('AI 评分失败');
+  } finally {
+    aiLoading.value = false;
+  }
+}
+
+function resetPractice() {
+  userAnswer.value = '';
+  practiceSubmitted.value = false;
+  practiceResult.value = null;
+}
+
+async function handleFavorite() {
+  if (!authStore.isAuthenticated) {
+    message.warning('请先登录');
+    return;
+  }
+  try {
+    if (isFavorite.value) {
+      await apiDelete(`/api/users/favorites/question/${route.params.id}`);
+      isFavorite.value = false;
+      message.success('已取消收藏');
+    } else {
+      await apiPost('/api/users/favorites', { itemType: 'question', itemId: route.params.id });
+      isFavorite.value = true;
+      message.success('已收藏');
+    }
+  } catch {
+    message.error('操作失败');
+  }
+}
+
+async function handleShare() {
+  showShareModal.value = true;
+  shareImageUrl.value = '';
+  try {
+    const res = await fetch(`/api/questions/${route.params.id}/share`);
+    if (res.ok) {
+      const blob = await res.blob();
+      shareImageUrl.value = URL.createObjectURL(blob);
+    }
+  } catch {
+    message.error('生成分享图片失败');
+  }
+}
+
+async function handleFeedback() {
+  if (!feedbackType.value || !feedbackContent.value.trim()) {
+    message.warning('请填写反馈类型和内容');
+    return;
+  }
+  if (!authStore.isAuthenticated) {
+    message.warning('请先登录');
+    return;
+  }
+  feedbackLoading.value = true;
+  try {
+    await apiPost(`/api/questions/${route.params.id}/feedback`, { type: feedbackType.value, content: feedbackContent.value });
+    message.success('反馈已提交');
+    showFeedbackModal.value = false;
+    feedbackType.value = undefined;
+    feedbackContent.value = '';
+  } catch {
+    message.error('提交反馈失败');
+  } finally {
+    feedbackLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchQuestion();
+  fetchAiConfigStatus();
+});
+</script>
+
+<style scoped>
+.question-detail {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.question-text h3,
+.question-answer h3 {
+  margin-bottom: 8px;
+  color: #667eea;
+}
+
+.answer-text {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  background: #fafafa;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.ai-answer-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: #FFF7ED;
+  border-left: 4px solid #667eea;
+  border-radius: 8px;
+}
+
+.ai-answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ai-answer-text {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+</style>

@@ -1,0 +1,127 @@
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #667eea;
+  --primary-hover: #764ba2;
+  --bg-color: #f0f2f5;
+  --card-radius: 12px;
+  --btn-radius: 8px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* 工具类变量 */
+  --page-max-width: 1200px;
+  --content-max-width: 800px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --text-color: #333;
+  --text-secondary: #666;
+  --text-muted: #999;
+}
+
+body {
+  background: var(--bg-color);
+}
+
+/* Card */
+.ant-card {
+  border-radius: var(--card-radius) !important;
+  border: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.ant-card:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Primary button gradient */
+.ant-btn-primary {
+  background: var(--primary-gradient) !important;
+  border: none !important;
+  border-radius: var(--btn-radius) !important;
+  font-weight: 500;
+}
+
+.ant-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Default button */
+.ant-btn-default {
+  border-radius: var(--btn-radius) !important;
+}
+
+/* Input */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker {
+  border-radius: var(--btn-radius) !important;
+}
+
+/* Tag */
+.ant-tag {
+  border-radius: 6px !important;
+}
+
+/* Table */
+.ant-table {
+  border-radius: var(--card-radius) !important;
+  overflow: hidden;
+}
+
+/* Modal */
+.ant-modal-content {
+  border-radius: var(--card-radius) !important;
+}
+
+/* Menu item transition */
+.ant-menu-item {
+  transition: all 0.3s !important;
+}
+
+/* Statistic card gradient */
+.stat-card-gradient {
+  background: var(--primary-gradient);
+  color: white;
+}
+
+.stat-card-gradient .ant-statistic-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.stat-card-gradient .ant-statistic-content {
+  color: white;
+}
+
+/* 页面容器 */
+.page-container {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+}
+
+.page-container-narrow {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+/* 统一标题样式 */
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* 响应式间距 */
+@media (max-width: 768px) {
+  .ant-layout-content {
+    margin: 12px !important;
+    padding: 16px !important;
+  }
+}
