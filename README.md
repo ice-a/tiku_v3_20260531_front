@@ -1,5 +1,7 @@
 # 题库系统 - 前端
 
+> 🔗 **后端仓库**：[ice-a/tiku_v3_20260531_back](https://github.com/ice-a/tiku_v3_20260531_back)
+
 基于 Vue 3 + Ant Design Vue 的前端项目。
 
 ## 技术栈
