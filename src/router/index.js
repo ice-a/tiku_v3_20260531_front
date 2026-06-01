@@ -10,7 +10,6 @@ const routes = [
         path: '',
         name: 'Home',
         component: () => import('../views/Home.vue'),
-        meta: { hideHitokoto: true },
       },
       {
         path: 'home',
@@ -22,6 +21,12 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/github/callback',
+    name: 'GithubCallback',
+    component: () => import('../views/GithubCallback.vue'),
     meta: { guest: true },
   },
   {

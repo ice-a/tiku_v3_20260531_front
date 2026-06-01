@@ -43,6 +43,22 @@
           </a-button>
         </a-form-item>
 
+        <a-divider class="login-divider">其他方式登录</a-divider>
+
+        <a-button
+          class="github-login-btn"
+          size="large"
+          block
+          @click="handleGithubLogin"
+        >
+          <img class="github-icon" :src="githubIcon" alt="" />
+          GitHub 登录
+        </a-button>
+
+        <p v-if="!canUseGithubLogin" class="oauth-config-tip">
+          GitHub 登录未配置，请设置 VITE_GITHUB_CLIENT_ID。
+        </p>
+
         <div class="login-footer">
           <router-link to="/forgot-password" class="forgot-link">忘记密码？</router-link>
         </div>
@@ -57,16 +73,22 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { MailOutlined, LockOutlined } from '@ant-design/icons-vue';
 import { useAuthStore } from '../stores/auth';
+import githubIcon from '../assets/github.svg';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const loading = ref(false);
+
+const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID || '';
+const githubRedirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI || `${window.location.origin}/github/callback`;
+const githubScope = import.meta.env.VITE_GITHUB_SCOPE || 'read:user user:email';
+const canUseGithubLogin = computed(() => Boolean(githubClientId && githubRedirectUri));
 
 const formState = reactive({
   email: '',
@@ -97,6 +119,27 @@ async function handleLogin() {
     loading.value = false;
   }
 }
+
+function handleGithubLogin() {
+  if (!canUseGithubLogin.value) {
+    message.warning('GitHub 登录参数未配置');
+    return;
+  }
+
+  const state = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+  sessionStorage.setItem('githubOAuthState', state);
+  const redirect = route.query.redirect || '/tiku';
+  sessionStorage.setItem('githubOAuthRedirect', String(redirect));
+  sessionStorage.setItem('githubOAuthRedirectUri', githubRedirectUri);
+
+  const params = new URLSearchParams({
+    client_id: githubClientId,
+    redirect_uri: githubRedirectUri,
+    scope: githubScope,
+    state,
+  });
+  window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
+}
 </script>
 
 <style scoped>
@@ -110,6 +153,41 @@ async function handleLogin() {
 
 .login-card {
   width: 400px;
+}
+
+.login-divider {
+  margin: 6px 0 18px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.github-login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-color: #d1d5db;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.github-login-btn:hover {
+  border-color: #0f172a;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+.github-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.oauth-config-tip {
+  margin: 10px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
 }
 
 .login-footer {

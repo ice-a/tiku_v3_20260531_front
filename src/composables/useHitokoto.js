@@ -11,6 +11,17 @@ const defaultHitokoto = {
   from_who: '',
 };
 
+function normalizeHitokoto(payload = {}) {
+  const data = payload.data || payload;
+  const fromWho = data.from_who || data.fromWho || '';
+
+  return {
+    text: data.text || data.hitokoto || defaultHitokoto.text,
+    from: data.from || '',
+    from_who: fromWho,
+  };
+}
+
 export function useHitokoto() {
   async function fetchHitokoto(forceRefresh = false) {
     // 检查缓存
@@ -29,13 +40,10 @@ export function useHitokoto() {
 
     loading.value = true;
     try {
-      const res = await fetch('https://v1.hitokoto.cn/');
-      const data = await res.json();
-      hitokoto.value = {
-        text: data.hitokoto || defaultHitokoto.text,
-        from: data.from || '',
-        from_who: data.from_who || '',
-      };
+      const res = await fetch(`/api/hitokoto${forceRefresh ? '?refresh=1' : ''}`);
+      if (res.ok === false) throw new Error(`Hitokoto request failed (${res.status})`);
+
+      hitokoto.value = normalizeHitokoto(await res.json());
       // 保存缓存
       localStorage.setItem(CACHE_KEY, JSON.stringify({
         data: hitokoto.value,

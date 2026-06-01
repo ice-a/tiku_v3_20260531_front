@@ -123,7 +123,7 @@ async function handleRegister() {
   loading.value = true;
   try {
     await authStore.register(formState.username, formState.email, formState.password);
-    message.success('注册成功');
+    message.success('注册成功，已自动登录');
     router.push('/tiku');
   } catch (error) {
     message.error(error.message || '注册失败');

@@ -33,6 +33,31 @@ export const useAuthStore = defineStore('auth', () => {
     return payload;
   }
 
+  async function loginWithGithubCode(code, redirectUri) {
+    const res = await fetch('/api/auth/github/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, redirectUri }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error || json.message || 'GitHub 登录失败');
+    }
+
+    const payload = json.data || json;
+    token.value = payload.accessToken;
+    refreshToken.value = payload.refreshToken || '';
+    user.value = payload.user || null;
+
+    localStorage.setItem('token', payload.accessToken);
+    if (payload.refreshToken) {
+      localStorage.setItem('refreshToken', payload.refreshToken);
+    }
+
+    return payload;
+  }
+
   async function register(username, email, password) {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
@@ -125,6 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     isAuthenticated,
     login,
+    loginWithGithubCode,
     register,
     logout,
     refreshAccessToken,
