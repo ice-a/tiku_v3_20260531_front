@@ -56,7 +56,15 @@
     </main>
 
     <footer class="footer">
-      题库系统 &copy; {{ new Date().getFullYear() }}
+      <span>题库系统 &copy; {{ new Date().getFullYear() }}</span>
+      <a
+        class="footer-link"
+        href="https://github.com/ice-a"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        GitHub: ice-a
+      </a>
     </footer>
   </div>
 </template>
@@ -303,12 +311,27 @@ function handleUserMenuClick({ key }) {
 
 /* Footer */
 .footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
   padding: 20px;
   text-align: center;
   font-size: 13px;
   color: #94a3b8;
   border-top: 1px solid #e8ecf1;
   background: #fff;
+}
+
+.footer-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 960px) {
