@@ -22,7 +22,7 @@
 | `VITE_API_BASE_URL` | 后端 API 地址 | `http://localhost:3000` |
 
 - **开发环境**：Vite 会自动代理 `/api` 请求到此地址
-- **生产环境**：填写后端部署地址，如 `https://your-backend.vercel.app`
+- **生产环境**：填写后端部署地址，如 `https://tiku-api.020417.xyz`
 
 ## 本地开发
 

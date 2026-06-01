@@ -1,5 +1,8 @@
 <template>
   <div class="tools-generator">
+    <a-button class="back-btn" size="small" @click="$router.replace('/tools')">
+      ← 返回工具
+    </a-button>
     <!-- JWT 编码/解码 -->
     <a-card title="JWT 编码/解码" class="section-card">
       <a-row :gutter="24">
@@ -172,8 +175,7 @@ async function handleGenerateUUID() {
 
 <style scoped>
 .tools-generator {
-  max-width: 1000px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .section-card {

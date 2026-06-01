@@ -1,13 +1,15 @@
 <template>
   <div class="admin-users">
     <a-card title="用户管理">
-      <a-input-search
-        v-model:value="keyword"
-        placeholder="搜索用户..."
-        style="width: 300px; margin-bottom: 16px"
-        allow-clear
-        @search="handleSearch"
-      />
+      <template #extra>
+        <a-input-search
+          v-model:value="keyword"
+          placeholder="搜索用户..."
+          style="width: 260px"
+          allow-clear
+          @search="handleSearch"
+        />
+      </template>
       <a-table
         :columns="columns"
         :data-source="users"
@@ -19,7 +21,7 @@
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'role'">
             <a-tag :color="record.role === 'admin' ? 'red' : 'blue'">
-              {{ record.role }}
+              {{ record.role === 'admin' ? '管理员' : '用户' }}
             </a-tag>
           </template>
           <template v-if="column.key === 'status'">
@@ -67,6 +69,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
+import { apiGet, apiPut, apiDelete } from '../utils/api.js';
 
 const keyword = ref('');
 const users = ref([]);
@@ -124,16 +127,11 @@ function buildQuery() {
 async function fetchUsers() {
   loading.value = true;
   try {
-    const res = await fetch(`/api/admin/users?${buildQuery()}`);
-    const data = await res.json();
-    if (data.success) {
-      users.value = data.data.users || data.data || [];
-      pagination.total = data.data.total || 0;
-    } else {
-      message.error(data.error || '获取用户列表失败');
-    }
-  } catch {
-    message.error('获取用户列表失败');
+    const data = await apiGet(`/api/admin/users?${buildQuery()}`);
+    users.value = data.users || [];
+    pagination.total = data.total || 0;
+  } catch (err) {
+    message.error(err.message || '获取用户列表失败');
   } finally {
     loading.value = false;
   }
@@ -149,21 +147,12 @@ function handleEdit(record) {
 async function handleEditSubmit() {
   editLoading.value = true;
   try {
-    const res = await fetch(`/api/admin/users/${editingId.value}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: editForm.role }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      message.success('更新成功');
-      editVisible.value = false;
-      fetchUsers();
-    } else {
-      message.error(data.error || '更新失败');
-    }
-  } catch {
-    message.error('更新失败');
+    await apiPut(`/api/admin/users/${editingId.value}`, { role: editForm.role });
+    message.success('更新成功');
+    editVisible.value = false;
+    fetchUsers();
+  } catch (err) {
+    message.error(err.message || '更新失败');
   } finally {
     editLoading.value = false;
   }
@@ -171,16 +160,11 @@ async function handleEditSubmit() {
 
 async function handleDelete(id) {
   try {
-    const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (data.success) {
-      message.success('删除成功');
-      fetchUsers();
-    } else {
-      message.error(data.error || '删除失败');
-    }
-  } catch {
-    message.error('删除失败');
+    await apiDelete(`/api/admin/users/${id}`);
+    message.success('删除成功');
+    fetchUsers();
+  } catch (err) {
+    message.error(err.message || '删除失败');
   }
 }
 
@@ -191,7 +175,6 @@ onMounted(() => {
 
 <style scoped>
 .admin-users {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

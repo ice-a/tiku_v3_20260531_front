@@ -119,7 +119,6 @@ onMounted(() => {
 
 <style scoped>
 .user-ai-config {
-  max-width: 600px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

@@ -1,5 +1,8 @@
 <template>
   <div class="tools-crypto">
+    <a-button class="back-btn" size="small" @click="$router.replace('/tools')">
+      ← 返回工具
+    </a-button>
     <a-card title="加密解密">
       <a-tabs v-model:activeKey="activeTab">
         <a-tab-pane key="hash" tab="哈希生成">
@@ -66,7 +69,6 @@ async function handleBase64(action) {
 
 <style scoped>
 .tools-crypto {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

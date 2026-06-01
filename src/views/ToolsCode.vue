@@ -1,5 +1,8 @@
 <template>
   <div class="tools-code">
+    <a-button class="back-btn" size="small" @click="$router.replace('/tools')">
+      ← 返回工具
+    </a-button>
     <a-card title="代码格式化">
       <div class="toolbar">
         <a-select v-model:value="lang" style="width: 200px">
@@ -73,8 +76,7 @@ function handleClear() {
 
 <style scoped>
 .tools-code {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .toolbar {

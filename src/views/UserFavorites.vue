@@ -91,8 +91,7 @@ onMounted(() => {
 
 <style scoped>
 .user-favorites {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .favorite-item {

@@ -1,5 +1,8 @@
 <template>
   <div class="tools-text">
+    <a-button class="back-btn" size="small" @click="$router.replace('/tools')">
+      ← 返回工具
+    </a-button>
     <a-card title="文本处理">
       <a-textarea v-model:value="input" placeholder="输入文本" :rows="6" />
       <a-space style="margin-top: 16px">
@@ -38,7 +41,6 @@ async function handleFormat(type) {
 
 <style scoped>
 .tools-text {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

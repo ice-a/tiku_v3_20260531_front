@@ -88,9 +88,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { apiGet } from '../utils/api.js';
 import { attachBlockIcons } from '../utils/blockIcon.js';
 
+const route = useRoute();
 const keyword = ref('');
 const category = ref(undefined);
 const selectedTags = ref([]);
@@ -173,6 +175,9 @@ async function fetchCategories() {
 }
 
 onMounted(() => {
+  if (typeof route.query.keyword === 'string') {
+    keyword.value = route.query.keyword;
+  }
   fetchAffiliates();
   fetchCategories();
 });

@@ -137,40 +137,6 @@
       </a-descriptions>
     </a-card>
 
-    <!-- 练习答题区域 -->
-    <a-card title="练习答题" style="margin-top: 16px">
-      <a-textarea
-        v-model:value="userAnswer"
-        placeholder="请输入你的答案..."
-        :rows="4"
-        :disabled="practiceSubmitted"
-      />
-      <div style="margin-top: 12px; display: flex; gap: 8px">
-        <a-button type="primary" @click="handlePractice" :loading="practiceLoading" :disabled="practiceSubmitted || !userAnswer.trim()">
-          提交答案
-        </a-button>
-        <a-button @click="handleAiScore" :loading="aiLoading" :disabled="practiceSubmitted || !userAnswer.trim()">
-          AI 评分
-        </a-button>
-        <a-button @click="resetPractice" :disabled="!practiceSubmitted">
-          重新答题
-        </a-button>
-      </div>
-
-      <!-- 练习结果 -->
-      <a-result
-        v-if="practiceResult"
-        :status="practiceResult.isCorrect ? 'success' : 'info'"
-        :title="practiceResult.isCorrect ? '回答正确!' : '回答有误'"
-        style="margin-top: 16px"
-      >
-        <template #subTitle v-if="practiceResult.aiScore !== undefined">
-          <p>AI 评分: {{ practiceResult.aiScore }} 分</p>
-          <MarkdownRenderer :content="practiceResult.aiAnalysis" />
-        </template>
-      </a-result>
-    </a-card>
-
     <!-- 分享图片预览 -->
     <a-modal v-model:open="showShareModal" title="分享题目" :footer="null">
       <img v-if="shareImageUrl" :src="shareImageUrl" alt="分享图片" style="width: 100%" />
@@ -221,11 +187,6 @@ const authStore = useAuthStore();
 const question = ref(null);
 const loading = ref(false);
 const showAnswer = ref(false);
-const userAnswer = ref('');
-const practiceSubmitted = ref(false);
-const practiceLoading = ref(false);
-const aiLoading = ref(false);
-const practiceResult = ref(null);
 const isFavorite = ref(false);
 const showShareModal = ref(false);
 const shareImageUrl = ref('');
@@ -350,50 +311,6 @@ function formatTime(dateStr) {
   return d.toLocaleDateString('zh-CN');
 }
 
-async function handlePractice() {
-  if (!authStore.isAuthenticated) {
-    message.warning('请先登录');
-    return;
-  }
-  practiceLoading.value = true;
-  try {
-    const data = await apiPost(`/api/questions/${route.params.id}/practice`, { userAnswer: userAnswer.value });
-    practiceSubmitted.value = true;
-    practiceResult.value = { isCorrect: data.isCorrect };
-  } catch {
-    // ignore
-  } finally {
-    practiceLoading.value = false;
-  }
-}
-
-async function handleAiScore() {
-  if (!authStore.isAuthenticated) {
-    message.warning('请先登录');
-    return;
-  }
-  aiLoading.value = true;
-  try {
-    const data = await apiPost(`/api/questions/${route.params.id}/ai-score`, { userAnswer: userAnswer.value });
-    practiceSubmitted.value = true;
-    practiceResult.value = {
-      isCorrect: data.score >= 60,
-      aiScore: data.score,
-      aiAnalysis: data.analysis,
-    };
-  } catch {
-    message.error('AI 评分失败');
-  } finally {
-    aiLoading.value = false;
-  }
-}
-
-function resetPractice() {
-  userAnswer.value = '';
-  practiceSubmitted.value = false;
-  practiceResult.value = null;
-}
-
 async function handleFavorite() {
   if (!authStore.isAuthenticated) {
     message.warning('请先登录');
@@ -460,8 +377,7 @@ onMounted(() => {
 
 <style scoped>
 .question-detail {
-  max-width: 900px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .question-text h3,

@@ -1,5 +1,8 @@
 <template>
   <div class="tools-encode">
+    <a-button class="back-btn" size="small" @click="$router.replace('/tools')">
+      ← 返回工具
+    </a-button>
     <a-card title="编码解码">
       <a-tabs v-model:activeKey="activeTab">
         <a-tab-pane key="base64" tab="Base64">
@@ -93,7 +96,6 @@ async function copyResult(text) {
 
 <style scoped>
 .tools-encode {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

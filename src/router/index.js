@@ -4,9 +4,19 @@ import { useAuthStore } from '../stores/auth';
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: () => import('../views/Home.vue'),
-    alias: '/home',
+    component: () => import('../views/Layout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'Home',
+        component: () => import('../views/Home.vue'),
+        meta: { hideHitokoto: true },
+      },
+      {
+        path: 'home',
+        redirect: '/',
+      },
+    ],
   },
   {
     path: '/login',

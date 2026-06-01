@@ -51,7 +51,7 @@
     </header>
 
     <main class="content">
-      <HitokotoBar compact style="margin-bottom: 16px" />
+      <HitokotoBar v-if="!route.meta.hideHitokoto" compact style="margin-bottom: 16px" />
       <router-view />
     </main>
 
@@ -131,10 +131,12 @@ function handleUserMenuClick({ key }) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1400px;
+  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
   height: 60px;
+  box-sizing: border-box;
 }
 
 /* Logo */
@@ -163,7 +165,7 @@ function handleUserMenuClick({ key }) {
   font-size: 18px;
   font-weight: 700;
   color: #1a1a2e;
-  letter-spacing: -0.3px;
+  letter-spacing: 0;
 }
 
 /* Navigation */
@@ -292,11 +294,11 @@ function handleUserMenuClick({ key }) {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  max-width: 1400px;
   width: 100%;
+  max-width: 1280px;
   margin: 24px auto;
   padding: 0 24px;
-  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 /* Footer */
@@ -307,5 +309,41 @@ function handleUserMenuClick({ key }) {
   color: #94a3b8;
   border-top: 1px solid #e8ecf1;
   background: #fff;
+}
+
+@media (max-width: 960px) {
+  .header-inner {
+    flex-wrap: wrap;
+    gap: 10px;
+    height: auto;
+    min-height: 60px;
+    padding: 10px 16px;
+  }
+
+  .nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .nav-item {
+    padding: 6px 10px;
+  }
+
+  .content {
+    margin: 16px auto;
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .header-right {
+    width: 100%;
+  }
+
+  .auth-btns {
+    justify-content: flex-end;
+  }
 }
 </style>

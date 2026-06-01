@@ -1,6 +1,9 @@
 <template>
   <div class="tools-image">
     <a-card title="图片处理">
+      <template #extra>
+        <a-button size="small" @click="goBack">← 返回工具</a-button>
+      </template>
       <a-tabs v-model:activeKey="activeTab">
         <a-tab-pane key="convert" tab="格式转换">
           <a-upload-dragger
@@ -187,7 +190,6 @@ function downloadResult(url, filename) {
 
 <style scoped>
 .tools-image {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

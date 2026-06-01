@@ -167,6 +167,35 @@
       </a-card>
     </template>
 
+    <!-- 社交信息 -->
+    <a-card title="社交信息" style="margin-top: 16px" :bordered="false">
+      <div class="social-list">
+        <div v-for="item in socialPresets" :key="item.key" class="social-item">
+          <div class="social-icon" :style="{ background: item.color }">
+            <span>{{ item.icon }}</span>
+          </div>
+          <div class="social-info">
+            <div class="social-name">{{ item.label }}</div>
+            <a-input
+              v-model:value="form.social[item.key]"
+              :placeholder="item.placeholder"
+              allow-clear
+              size="small"
+            />
+          </div>
+        </div>
+      </div>
+      <a-divider>自定义社交链接</a-divider>
+      <div class="custom-social-list">
+        <div v-for="(item, index) in form.customSocial" :key="index" class="custom-social-item">
+          <a-input v-model:value="item.name" placeholder="名称" style="width: 120px" size="small" />
+          <a-input v-model:value="item.url" placeholder="https://..." size="small" style="flex:1" />
+          <a-button type="text" size="small" danger @click="removeCustomSocial(index)">删除</a-button>
+        </div>
+        <a-button type="dashed" size="small" @click="addCustomSocial" class="add-social-btn">+ 添加自定义链接</a-button>
+      </div>
+    </a-card>
+
     <!-- 编辑表单 -->
     <a-card title="编辑个人信息" style="margin-top: 16px" :bordered="false">
       <a-form :model="form" layout="vertical" @finish="handleSubmit">
@@ -179,11 +208,6 @@
           <a-col :xs="24" :sm="12">
             <a-form-item label="昵称" name="nickname">
               <a-input v-model:value="form.nickname" placeholder="请输入昵称" />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="手机号" name="phone">
-              <a-input v-model:value="form.phone" placeholder="请输入手机号" />
             </a-form-item>
           </a-col>
           <a-col :xs="24" :sm="12">
@@ -243,13 +267,23 @@ const siteStats = reactive({
   totalAffiliates: 0,
   totalPractices: 0,
 });
+const socialPresets = [
+  { key: 'github', label: 'GitHub', icon: 'GH', color: '#333', placeholder: '用户名或主页链接' },
+  { key: 'bilibili', label: 'Bilibili', icon: 'B', color: '#fb7299', placeholder: 'UID 或空间链接' },
+  { key: 'twitter', label: 'Twitter / X', icon: 'X', color: '#1da1f2', placeholder: '@用户名或链接' },
+  { key: 'telegram', label: 'Telegram', icon: 'TG', color: '#0088cc', placeholder: '@用户名或链接' },
+  { key: 'discord', label: 'Discord', icon: 'DC', color: '#5865f2', placeholder: '用户名#标签或邀请链接' },
+  { key: 'steam', label: 'Steam', icon: 'S', color: '#1b2838', placeholder: 'Steam ID 或主页链接' },
+];
+
 const form = reactive({
   username: '',
   email: '',
   avatar: '',
   nickname: '',
-  phone: '',
   bio: '',
+  social: {},
+  customSocial: [],
 });
 
 const displayName = computed(() => form.nickname || form.username || '');
@@ -317,8 +351,10 @@ async function fetchProfile() {
     form.email = user.email || '';
     form.avatar = user.avatar || '';
     form.nickname = user.nickname || '';
-    form.phone = user.phone || '';
     form.bio = user.bio || '';
+    const s = user.socials || user.social || {};
+    form.social = { ...s };
+    form.customSocial = user.customSocial || [];
     createdAt.value = user.createdAt || '';
     lastLoginAt.value = user.lastLoginAt || '';
   } catch {
@@ -356,14 +392,23 @@ async function fetchSubmissions() {
   }
 }
 
+function addCustomSocial() {
+  form.customSocial.push({ name: '', url: '' });
+}
+
+function removeCustomSocial(index) {
+  form.customSocial.splice(index, 1);
+}
+
 async function handleSubmit() {
   loading.value = true;
   try {
     await apiPut('/api/users/profile', {
       username: form.username,
       nickname: form.nickname,
-      phone: form.phone,
       bio: form.bio,
+      socials: form.social,
+      customSocial: form.customSocial.filter(item => item.name || item.url),
     });
     message.success('保存成功');
   } catch {
@@ -383,8 +428,7 @@ onMounted(() => {
 
 <style scoped>
 .user-profile {
-  max-width: 700px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 /* Banner */
@@ -491,6 +535,71 @@ onMounted(() => {
   font-size: 12px;
   color: #94a3b8;
   margin-top: 4px;
+}
+
+/* Social */
+.social-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.social-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.social-item:hover {
+  background: #f1f5f9;
+}
+
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.social-icon span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.social-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.social-name {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.custom-social-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.custom-social-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-social-btn {
+  align-self: flex-start;
 }
 
 /* Admin Grid */

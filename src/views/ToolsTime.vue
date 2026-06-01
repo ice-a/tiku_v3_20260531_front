@@ -1,5 +1,8 @@
 <template>
   <div class="tools-time">
+    <a-button class="back-btn" size="small" @click="$router.replace('/tools')">
+      ← 返回工具
+    </a-button>
     <a-row :gutter="[16, 16]">
       <!-- 时间戳转换卡片 -->
       <a-col :xs="24" :lg="12">
@@ -157,8 +160,7 @@ onUnmounted(() => {
 
 <style scoped>
 .tools-time {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .time-card {

@@ -70,7 +70,6 @@ onMounted(() => {
 
 <style scoped>
 .user-notifications {
-  max-width: 600px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

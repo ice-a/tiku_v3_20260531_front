@@ -115,10 +115,12 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { apiGet, apiPost } from '../utils/api.js';
 import { attachBlockIcons } from '../utils/blockIcon.js';
 
+const route = useRoute();
 const keyword = ref('');
 const category = ref(undefined);
 const selectedTags = ref([]);
@@ -241,6 +243,9 @@ function resetSubmitForm() {
 }
 
 onMounted(() => {
+  if (typeof route.query.keyword === 'string') {
+    keyword.value = route.query.keyword;
+  }
   fetchNavigations();
   fetchCategories();
 });

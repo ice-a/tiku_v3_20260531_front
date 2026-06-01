@@ -15,6 +15,29 @@
           <a-form-item label="邮箱验证">
             <a-switch v-model:checked="form.emailVerificationEnabled" />
           </a-form-item>
+          <a-divider>邮件服务器配置（SMTP）</a-divider>
+          <a-row :gutter="16">
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="SMTP 主机" name="smtpHost">
+                <a-input v-model:value="form.smtpHost" placeholder="如：smtp.qq.com" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="SMTP 端口" name="smtpPort">
+                <a-input v-model:value="form.smtpPort" placeholder="465 或 587" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="发信邮箱" name="smtpUser">
+                <a-input v-model:value="form.smtpUser" placeholder="noreply@example.com" />
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12">
+              <a-form-item label="发信人名称" name="smtpFrom">
+                <a-input v-model:value="form.smtpFrom" placeholder="题库系统" />
+              </a-form-item>
+            </a-col>
+          </a-row>
           <a-form-item>
             <a-button type="primary" html-type="submit" :loading="loading">保存设置</a-button>
           </a-form-item>
@@ -37,6 +60,10 @@ const form = reactive({
   siteDescription: '',
   registrationEnabled: true,
   emailVerificationEnabled: false,
+  smtpHost: '',
+  smtpPort: '465',
+  smtpUser: '',
+  smtpFrom: '',
 });
 
 async function fetchSettings() {
@@ -48,6 +75,10 @@ async function fetchSettings() {
     form.siteDescription = settings.siteDescription || '';
     form.registrationEnabled = settings.registrationEnabled ?? true;
     form.emailVerificationEnabled = settings.emailVerificationEnabled ?? false;
+    form.smtpHost = settings.smtpHost || '';
+    form.smtpPort = settings.smtpPort || '465';
+    form.smtpUser = settings.smtpUser || '';
+    form.smtpFrom = settings.smtpFrom || '';
   } catch {
     message.error('获取系统设置失败');
   } finally {
@@ -63,6 +94,10 @@ async function handleSubmit() {
       siteDescription: form.siteDescription,
       registrationEnabled: form.registrationEnabled,
       emailVerificationEnabled: form.emailVerificationEnabled,
+      smtpHost: form.smtpHost,
+      smtpPort: form.smtpPort,
+      smtpUser: form.smtpUser,
+      smtpFrom: form.smtpFrom,
     });
     message.success('设置保存成功');
   } catch {
@@ -79,7 +114,6 @@ onMounted(() => {
 
 <style scoped>
 .admin-settings {
-  max-width: 600px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

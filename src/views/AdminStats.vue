@@ -1,7 +1,7 @@
 <template>
   <div class="admin-stats">
     <!-- 概览卡片 -->
-    <a-row :gutter="16">
+    <a-row :gutter="[16, 16]">
       <a-col :xs="12" :sm="6">
         <a-card>
           <a-statistic title="总用户" :value="stats.users?.total || 0" />
@@ -25,7 +25,7 @@
     </a-row>
 
     <!-- 详细统计 -->
-    <a-row :gutter="16" style="margin-top: 16px">
+    <a-row :gutter="[16, 16]" style="margin-top: 16px">
       <a-col :xs="24" :md="12">
         <a-card title="内容统计">
           <a-spin :spinning="contentLoading">
@@ -53,7 +53,7 @@
     </a-row>
 
     <!-- 活动统计 -->
-    <a-row :gutter="16" style="margin-top: 16px">
+    <a-row :gutter="[16, 16]" style="margin-top: 16px">
       <a-col :span="24">
         <a-card title="活动统计">
           <a-spin :spinning="statsLoading">
@@ -126,7 +126,6 @@ onMounted(() => {
 
 <style scoped>
 .admin-stats {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>
