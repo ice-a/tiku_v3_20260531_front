@@ -36,7 +36,7 @@
             <a-select-option value="hard">困难</a-select-option>
           </a-select>
         </a-col>
-        <a-col :xs="24" :sm="8">
+        <a-col :xs="24" :sm="6">
           <a-select
             v-model:value="selectedTags"
             mode="tags"
@@ -44,6 +44,11 @@
             style="width: 100%"
             @change="handleSearch"
           />
+        </a-col>
+        <a-col :xs="24" :sm="2">
+          <a-button type="primary" block @click="showUploadModal = true">
+            上传题目
+          </a-button>
         </a-col>
       </a-row>
     </a-card>
@@ -76,14 +81,55 @@
             <a-tag v-for="tag in record.tags?.slice(0, 3)" :key="tag">{{ tag }}</a-tag>
           </a-space>
         </template>
+        <template v-if="column.key === 'status'">
+          <a-tag :color="statusColor(record.status)">{{ statusLabel(record.status) }}</a-tag>
+        </template>
       </template>
     </a-table>
+
+    <!-- 上传题目弹窗 -->
+    <a-modal
+      v-model:open="showUploadModal"
+      title="上传题目"
+      @ok="handleUpload"
+      :confirm-loading="uploadLoading"
+      @cancel="resetUploadForm"
+    >
+      <a-form :model="uploadForm" layout="vertical">
+        <a-form-item label="题目内容" required>
+          <a-textarea v-model:value="uploadForm.text" placeholder="请输入题目内容" :rows="4" />
+        </a-form-item>
+        <a-form-item label="参考答案" required>
+          <a-textarea v-model:value="uploadForm.answer" placeholder="请输入参考答案" :rows="3" />
+        </a-form-item>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="分类" required>
+              <a-input v-model:value="uploadForm.category" placeholder="如：前端、后端" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="难度" required>
+              <a-select v-model:value="uploadForm.difficulty" placeholder="选择难度">
+                <a-select-option value="easy">简单</a-select-option>
+                <a-select-option value="medium">中等</a-select-option>
+                <a-select-option value="hard">困难</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-form-item label="标签">
+          <a-select v-model:value="uploadForm.tags" mode="tags" placeholder="输入标签后回车" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { apiGet } from '../utils/api.js';
+import { message } from 'ant-design-vue';
+import { apiGet, apiPost } from '../utils/api.js';
 
 const keyword = ref('');
 const category = ref(undefined);
@@ -92,6 +138,17 @@ const selectedTags = ref([]);
 const questions = ref([]);
 const loading = ref(false);
 const categories = ref([]);
+
+// Upload state
+const showUploadModal = ref(false);
+const uploadLoading = ref(false);
+const uploadForm = reactive({
+  text: '',
+  answer: '',
+  category: '',
+  difficulty: undefined,
+  tags: [],
+});
 
 const pagination = reactive({
   current: 1,
@@ -106,8 +163,9 @@ const columns = [
   { title: '分类', key: 'category', dataIndex: 'category', width: 120 },
   { title: '难度', key: 'difficulty', dataIndex: 'difficulty', width: 80 },
   { title: '标签', key: 'tags', dataIndex: 'tags', width: 200 },
-  { title: '浏览', dataIndex: ['stats', 'views'], width: 80 },
-  { title: '答题', dataIndex: ['stats', 'attempts'], width: 80 },
+  { title: '状态', key: 'status', dataIndex: 'status', width: 90 },
+  { title: '浏览', dataIndex: ['stats', 'views'], width: 70 },
+  { title: '答题', dataIndex: ['stats', 'attempts'], width: 70 },
 ];
 
 function difficultyColor(d) {
@@ -118,6 +176,16 @@ function difficultyColor(d) {
 function difficultyLabel(d) {
   const map = { easy: '简单', medium: '中等', hard: '困难' };
   return map[d] || d;
+}
+
+function statusColor(s) {
+  const map = { pending: 'orange', approved: 'green', rejected: 'red' };
+  return map[s] || 'default';
+}
+
+function statusLabel(s) {
+  const map = { pending: '待审核', approved: '已通过', rejected: '已拒绝' };
+  return map[s] || s || '-';
 }
 
 function truncate(str, len) {
@@ -178,6 +246,39 @@ async function fetchCategories() {
   }
 }
 
+async function handleUpload() {
+  if (!uploadForm.text.trim() || !uploadForm.answer.trim() || !uploadForm.category || !uploadForm.difficulty) {
+    message.warning('请填写题目、答案、分类和难度');
+    return;
+  }
+  uploadLoading.value = true;
+  try {
+    await apiPost('/api/questions', {
+      text: uploadForm.text,
+      answer: uploadForm.answer,
+      category: uploadForm.category,
+      difficulty: uploadForm.difficulty,
+      tags: uploadForm.tags,
+    });
+    message.success('题目已提交，等待审核');
+    showUploadModal.value = false;
+    resetUploadForm();
+    fetchQuestions();
+  } catch (err) {
+    message.error(err.message || '上传失败');
+  } finally {
+    uploadLoading.value = false;
+  }
+}
+
+function resetUploadForm() {
+  uploadForm.text = '';
+  uploadForm.answer = '';
+  uploadForm.category = '';
+  uploadForm.difficulty = undefined;
+  uploadForm.tags = [];
+}
+
 onMounted(() => {
   fetchQuestions();
   fetchCategories();
@@ -186,7 +287,6 @@ onMounted(() => {
 
 <style scoped>
 .question-list {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>

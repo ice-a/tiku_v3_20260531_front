@@ -3,6 +3,7 @@
     <a-card title="内容审核">
       <a-tabs v-model:activeKey="activeTab" @change="handleTabChange">
         <a-tab-pane key="question" tab="题目审核" />
+        <a-tab-pane key="navigation" tab="导航审核" />
         <a-tab-pane key="feedback" tab="反馈处理" />
       </a-tabs>
 
@@ -16,10 +17,19 @@
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'content'">
-            <span>{{ truncate(record.text || record.content || record.title || '', 80) }}</span>
+            <span>{{ truncate(record.text || record.name || record.content || '', 80) }}</span>
+          </template>
+          <template v-if="column.key === 'url'">
+            <a :href="record.url" target="_blank" rel="noopener noreferrer" v-if="record.url">
+              {{ truncate(record.url, 40) }}
+            </a>
+            <span v-else>-</span>
           </template>
           <template v-if="column.key === 'category'">
             <a-tag>{{ record.category || '-' }}</a-tag>
+          </template>
+          <template v-if="column.key === 'uploader'">
+            {{ record.uploadedBy?.username || record.userId?.username || '-' }}
           </template>
           <template v-if="column.key === 'status'">
             <a-tag :color="statusColor(record.status)">{{ statusLabel(record.status) }}</a-tag>
@@ -42,6 +52,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
+import { apiGet, apiPut } from '../utils/api.js';
 
 const activeTab = ref('question');
 const pendingItems = ref([]);
@@ -57,8 +68,18 @@ const pagination = reactive({
 
 const questionColumns = [
   { title: '题目内容', key: 'content', dataIndex: 'text', ellipsis: true },
+  { title: '提交人', key: 'uploader', width: 100 },
   { title: '分类', key: 'category', dataIndex: 'category', width: 120 },
   { title: '状态', key: 'status', dataIndex: 'status', width: 100 },
+  { title: '提交时间', key: 'createdAt', dataIndex: 'createdAt', width: 180 },
+  { title: '操作', key: 'action', width: 160, fixed: 'right' },
+];
+
+const navigationColumns = [
+  { title: '网站名称', key: 'content', dataIndex: 'name', ellipsis: true },
+  { title: '链接', key: 'url', dataIndex: 'url', width: 200 },
+  { title: '提交人', key: 'uploader', width: 100 },
+  { title: '分类', key: 'category', dataIndex: 'category', width: 120 },
   { title: '提交时间', key: 'createdAt', dataIndex: 'createdAt', width: 180 },
   { title: '操作', key: 'action', width: 160, fixed: 'right' },
 ];
@@ -94,7 +115,9 @@ function statusLabel(s) {
 }
 
 function handleTabChange(key) {
-  columns.value = key === 'question' ? questionColumns : feedbackColumns;
+  if (key === 'question') columns.value = questionColumns;
+  else if (key === 'navigation') columns.value = navigationColumns;
+  else columns.value = feedbackColumns;
   pagination.current = 1;
   fetchPendingItems();
 }
@@ -112,14 +135,9 @@ async function fetchPendingItems() {
     params.set('type', activeTab.value);
     params.set('page', pagination.current);
     params.set('limit', pagination.pageSize);
-    const res = await fetch(`/api/admin/content/pending?${params.toString()}`);
-    const data = await res.json();
-    if (data.success) {
-      pendingItems.value = data.data?.pending || [];
-      pagination.total = pendingItems.value.length;
-    } else {
-      message.error(data.error || '获取待审核内容失败');
-    }
+    const data = await apiGet(`/api/admin/content/pending?${params.toString()}`);
+    pendingItems.value = data.pending || [];
+    pagination.total = pendingItems.value.length;
   } catch {
     message.error('获取待审核内容失败');
   } finally {
@@ -129,17 +147,9 @@ async function fetchPendingItems() {
 
 async function handleApprove(record) {
   try {
-    const res = await fetch(`/api/admin/content/${record._type}/${record._id}/approve`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const data = await res.json();
-    if (data.success) {
-      message.success('审核通过');
-      fetchPendingItems();
-    } else {
-      message.error(data.error || '操作失败');
-    }
+    await apiPut(`/api/admin/content/${record._type}/${record._id}/approve`, {});
+    message.success('审核通过');
+    fetchPendingItems();
   } catch {
     message.error('操作失败');
   }
@@ -147,17 +157,9 @@ async function handleApprove(record) {
 
 async function handleReject(record) {
   try {
-    const res = await fetch(`/api/admin/content/${record._type}/${record._id}/reject`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const data = await res.json();
-    if (data.success) {
-      message.success('已拒绝');
-      fetchPendingItems();
-    } else {
-      message.error(data.error || '操作失败');
-    }
+    await apiPut(`/api/admin/content/${record._type}/${record._id}/reject`, {});
+    message.success('已拒绝');
+    fetchPendingItems();
   } catch {
     message.error('操作失败');
   }

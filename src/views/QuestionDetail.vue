@@ -40,7 +40,7 @@
       <div class="question-answer">
         <h3>参考答案</h3>
         <template v-if="showAnswer">
-          <p class="answer-text">{{ question.answer }}</p>
+          <div class="answer-text"><MarkdownRenderer :content="question.answer" /></div>
           <a-button type="link" size="small" @click="showAnswer = false">隐藏答案</a-button>
         </template>
         <template v-else>
@@ -56,13 +56,75 @@
           <a-tag color="purple">AI 生成</a-tag>
           <a-button type="link" size="small" @click="showAiAnswer = false">收起</a-button>
         </div>
-        <p class="ai-answer-text">{{ aiAnswer }}</p>
+        <div class="ai-answer-text"><MarkdownRenderer :content="aiAnswer" /></div>
         <a-space>
-          <a-button type="primary" size="small" @click="adoptAiAnswer" :loading="adoptLoading">
-            采纳为答案
+          <a-button type="primary" size="small" @click="submitAiToPool" :loading="adoptLoading">
+            提交到答案池
           </a-button>
           <a-button size="small" @click="showAiAnswer = false">忽略</a-button>
         </a-space>
+      </div>
+
+      <!-- 答案池 -->
+      <div class="answer-pool-section">
+        <div class="answer-pool-header">
+          <h3>答案池 <a-tag>{{ answerPool.length }}</a-tag></h3>
+        </div>
+
+        <!-- 提交自己的答案 -->
+        <div v-if="authStore.isAuthenticated" class="answer-pool-submit">
+          <a-textarea
+            v-model:value="poolAnswerText"
+            placeholder="提交你的答案到答案池..."
+            :rows="3"
+          />
+          <a-button
+            type="primary"
+            size="small"
+            style="margin-top: 8px"
+            @click="submitMyAnswer"
+            :loading="poolSubmitLoading"
+            :disabled="!poolAnswerText.trim()"
+          >
+            提交到答案池
+          </a-button>
+        </div>
+        <div v-else class="answer-pool-login-hint">
+          <a-typography-text type="secondary">登录后可提交答案到答案池</a-typography-text>
+        </div>
+
+        <!-- 答案列表 -->
+        <a-list
+          v-if="answerPool.length"
+          :data-source="answerPool"
+          :loading="answerPoolLoading"
+          size="small"
+          class="answer-pool-list"
+        >
+          <template #renderItem="{ item }">
+            <a-list-item>
+              <a-list-item-meta>
+                <template #avatar>
+                  <a-avatar style="background-color: #667eea">
+                    {{ (item.user?.username || 'U')[0].toUpperCase() }}
+                  </a-avatar>
+                </template>
+                <template #title>
+                  <a-space>
+                    <span>{{ item.user?.username || '匿名用户' }}</span>
+                    <a-tag v-if="item.source === 'ai'" color="purple" size="small">AI</a-tag>
+                    <a-tag v-else color="blue" size="small">手动</a-tag>
+                  </a-space>
+                </template>
+                <template #description>
+                  <div class="pool-answer-text"><MarkdownRenderer :content="item.answer" /></div>
+                  <div class="pool-answer-time">{{ formatTime(item.createdAt) }}</div>
+                </template>
+              </a-list-item-meta>
+            </a-list-item>
+          </template>
+        </a-list>
+        <a-empty v-else-if="!answerPoolLoading" description="暂无答案，快来提交第一个吧" />
       </div>
 
       <a-descriptions bordered size="small" style="margin-top: 16px" :column="{ xs: 1, sm: 2 }">
@@ -104,7 +166,7 @@
       >
         <template #subTitle v-if="practiceResult.aiScore !== undefined">
           <p>AI 评分: {{ practiceResult.aiScore }} 分</p>
-          <p>{{ practiceResult.aiAnalysis }}</p>
+          <MarkdownRenderer :content="practiceResult.aiAnalysis" />
         </template>
       </a-result>
     </a-card>
@@ -151,6 +213,7 @@ import { useRoute } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { useAuthStore } from '../stores/auth';
 import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api.js';
+import MarkdownRenderer from '../components/MarkdownRenderer.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -177,6 +240,12 @@ const aiAnswer = ref('');
 const aiAnswerLoading = ref(false);
 const showAiAnswer = ref(false);
 const adoptLoading = ref(false);
+
+// 答案池状态
+const answerPool = ref([]);
+const answerPoolLoading = ref(false);
+const poolAnswerText = ref('');
+const poolSubmitLoading = ref(false);
 
 function difficultyColor(d) {
   const map = { easy: 'green', medium: 'orange', hard: 'red' };
@@ -223,18 +292,62 @@ async function handleAiAnswer() {
   }
 }
 
-async function adoptAiAnswer() {
+async function submitAiToPool() {
   adoptLoading.value = true;
   try {
-    await apiPut(`/api/questions/${route.params.id}`, { answer: aiAnswer.value });
-    question.value.answer = aiAnswer.value;
+    const data = await apiPost(`/api/questions/${route.params.id}/answer-pool`, {
+      answer: aiAnswer.value,
+      source: 'ai'
+    });
+    answerPool.value = data.answerPool;
     showAiAnswer.value = false;
-    message.success('已采纳 AI 答案');
+    message.success('AI 答案已提交到答案池');
   } catch {
-    message.error('采纳答案失败');
+    message.error('提交答案失败');
   } finally {
     adoptLoading.value = false;
   }
+}
+
+async function submitMyAnswer() {
+  if (!poolAnswerText.value.trim()) return;
+  poolSubmitLoading.value = true;
+  try {
+    const data = await apiPost(`/api/questions/${route.params.id}/answer-pool`, {
+      answer: poolAnswerText.value,
+      source: 'manual'
+    });
+    answerPool.value = data.answerPool;
+    poolAnswerText.value = '';
+    message.success('答案已提交到答案池');
+  } catch {
+    message.error('提交答案失败');
+  } finally {
+    poolSubmitLoading.value = false;
+  }
+}
+
+async function fetchAnswerPool() {
+  answerPoolLoading.value = true;
+  try {
+    const data = await apiGet(`/api/questions/${route.params.id}/answer-pool`);
+    answerPool.value = data.answerPool || [];
+  } catch {
+    // ignore
+  } finally {
+    answerPoolLoading.value = false;
+  }
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
+  return d.toLocaleDateString('zh-CN');
 }
 
 async function handlePractice() {
@@ -341,6 +454,7 @@ async function handleFeedback() {
 onMounted(() => {
   fetchQuestion();
   fetchAiConfigStatus();
+  fetchAnswerPool();
 });
 </script>
 
@@ -383,5 +497,53 @@ onMounted(() => {
   white-space: pre-wrap;
   line-height: 1.8;
   margin-bottom: 12px;
+}
+
+.answer-pool-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f6f8fa;
+  border-radius: 8px;
+}
+
+.answer-pool-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.answer-pool-header h3 {
+  margin: 0;
+  color: #667eea;
+}
+
+.answer-pool-submit {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.answer-pool-login-hint {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8e8e8;
+  text-align: center;
+}
+
+.answer-pool-list {
+  background: transparent;
+}
+
+.pool-answer-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.pool-answer-time {
+  color: #999;
+  font-size: 12px;
 }
 </style>

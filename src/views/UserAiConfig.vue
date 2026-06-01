@@ -47,7 +47,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
-import { apiGet, apiPut } from '../utils/api.js';
+import { apiGet, apiPost, apiPut } from '../utils/api.js';
 
 const loading = ref(false);
 const modelsLoading = ref(false);
@@ -82,7 +82,10 @@ async function fetchModels() {
   }
   modelsLoading.value = true;
   try {
-    const data = await apiGet('/api/users/ai-config/models');
+    const data = await apiPost('/api/users/ai-config/models', {
+      baseUrl: form.baseUrl,
+      apiKey: form.apiKey,
+    });
     models.value = data.models || [];
     message.success(`已获取 ${models.value.length} 个模型`);
   } catch (err) {
