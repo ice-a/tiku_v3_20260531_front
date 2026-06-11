@@ -179,6 +179,10 @@ async function handleSubmit() {
     message.error('请填写完整信息');
     return;
   }
+  if (form.newPassword.length < 10) {
+    message.error('密码至少 10 个字符，需包含大小写字母、数字或特殊字符中的至少 3 种');
+    return;
+  }
   loading.value = true;
   try {
     await apiPut('/api/users/password', {

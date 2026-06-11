@@ -102,7 +102,7 @@ const rules = {
   ],
   password: [
     { required: true, message: '请输入密码' },
-    { min: 6, message: '密码至少 6 个字符' },
+    { min: 10, message: '密码至少 10 个字符' },
   ],
 };
 

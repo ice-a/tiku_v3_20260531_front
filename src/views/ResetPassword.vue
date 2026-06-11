@@ -27,8 +27,8 @@
               v-model="password"
               type="password"
               class="input"
-              placeholder="至少 6 个字符"
-              minlength="6"
+              placeholder="至少 10 个字符，含大小写字母、数字或特殊字符中至少 3 种"
+              minlength="10"
               required
             />
           </div>
@@ -72,8 +72,8 @@ async function handleSubmit() {
     alert('两次输入的密码不一致');
     return;
   }
-  if (password.value.length < 6) {
-    alert('密码至少 6 个字符');
+  if (password.value.length < 10) {
+    alert('密码至少 10 个字符，需包含大小写字母、数字或特殊字符中的至少 3 种');
     return;
   }
 
