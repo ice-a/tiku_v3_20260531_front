@@ -44,6 +44,9 @@
       </div>
     </section>
 
+    <!-- 广告位 -->
+    <AdSlot slot="home_banner" />
+
     <a-alert
       v-if="errorText"
       type="warning"
@@ -218,6 +221,7 @@ import {
 } from '@ant-design/icons-vue';
 import { apiGet } from '../utils/api.js';
 import { attachBlockIcons } from '../utils/blockIcon.js';
+import AdSlot from '../components/AdSlot.vue';
 
 const router = useRouter();
 

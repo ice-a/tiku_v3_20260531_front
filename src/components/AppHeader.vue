@@ -49,6 +49,8 @@
                 {{ userInfo.username?.charAt(0)?.toUpperCase() }}
               </a-avatar>
               <span class="username">{{ userInfo.username }}</span>
+              <a-tag v-if="isPro" color="purple" size="small">PRO</a-tag>
+              <a-tag v-if="isEnterprise" color="gold" size="small">企业</a-tag>
             </a-space>
             <template #overlay>
               <a-menu @click="handleUserMenuClick">
@@ -59,6 +61,10 @@
                 <a-menu-item key="favorites">
                   <StarOutlined />
                   收藏夹
+                </a-menu-item>
+                <a-menu-item key="membership">
+                  <CrownOutlined />
+                  会员中心
                 </a-menu-item>
                 <a-menu-divider />
                 <a-menu-item key="logout">
@@ -86,7 +92,8 @@ import {
   ToolOutlined,
   UserOutlined,
   StarOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  CrownOutlined,
 } from '@ant-design/icons-vue';
 
 const router = useRouter();
@@ -97,6 +104,8 @@ const selectedKeys = ref([route.name || 'home']);
 
 const isLoggedIn = computed(() => !!userStore.token);
 const userInfo = computed(() => userStore.user || {});
+const isPro = computed(() => userStore.user?.membership?.plan === 'pro');
+const isEnterprise = computed(() => userStore.user?.membership?.plan === 'enterprise');
 
 const routeMap = {
   home: '/',
@@ -124,10 +133,13 @@ const goToRegister = () => {
 const handleUserMenuClick = ({ key }) => {
   switch (key) {
     case 'profile':
-      router.push('/profile');
+      router.push('/user/profile');
       break;
     case 'favorites':
-      router.push('/favorites');
+      router.push('/user/favorites');
+      break;
+    case 'membership':
+      router.push('/user/membership');
       break;
     case 'logout':
       userStore.logout();

@@ -162,6 +162,13 @@
         </a-form-item>
       </a-form>
     </a-modal>
+
+    <!-- 广告位 -->
+    <AdSlot slot="question_detail_bottom" />
+
+    <!-- 打赏 -->
+    <DonateButton />
+    <DonateWall />
   </div>
 
   <a-spin v-else-if="loading" style="display: block; margin: 100px auto" />
@@ -180,6 +187,9 @@ import { message } from 'ant-design-vue';
 import { useAuthStore } from '../stores/auth';
 import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api.js';
 import MarkdownRenderer from '../components/MarkdownRenderer.vue';
+import AdSlot from '../components/AdSlot.vue';
+import DonateButton from '../components/DonateButton.vue';
+import DonateWall from '../components/DonateWall.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();

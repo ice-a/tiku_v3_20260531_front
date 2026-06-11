@@ -182,6 +182,11 @@ const routes = [
         name: 'UserAiConfig',
         component: () => import('../views/UserAiConfig.vue'),
       },
+      {
+        path: 'membership',
+        name: 'UserMembership',
+        component: () => import('../views/UserMembership.vue'),
+      },
     ],
   },
   {
