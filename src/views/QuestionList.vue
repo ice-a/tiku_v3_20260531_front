@@ -1,6 +1,5 @@
 <template>
   <div class="question-list">
-    <!-- 搜索栏 -->
     <a-card style="margin-bottom: 16px">
       <a-row :gutter="[16, 12]" align="middle">
         <a-col :xs="24" :sm="8">
@@ -53,18 +52,18 @@
       </a-row>
     </a-card>
 
-    <!-- 题目列表 -->
     <a-table
       :columns="columns"
       :data-source="questions"
       :loading="loading"
       :pagination="pagination"
       row-key="_id"
+      :scroll="{ x: 800 }"
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'text'">
-          <router-link :to="`/tiku/${record._id}`">
+          <router-link :to="`/tiku/${record._id}`" class="question-link">
             {{ truncate(record.text, 60) }}
           </router-link>
         </template>
@@ -77,7 +76,7 @@
           </a-tag>
         </template>
         <template v-if="column.key === 'tags'">
-          <a-space>
+          <a-space wrap size="small">
             <a-tag v-for="tag in record.tags?.slice(0, 3)" :key="tag">{{ tag }}</a-tag>
           </a-space>
         </template>
@@ -87,7 +86,6 @@
       </template>
     </a-table>
 
-    <!-- 上传题目弹窗 -->
     <a-modal
       v-model:open="showUploadModal"
       title="上传题目"
@@ -127,7 +125,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { apiGet, apiPost } from '../utils/api.js';
@@ -141,7 +139,6 @@ const questions = ref([]);
 const loading = ref(false);
 const categories = ref([]);
 
-// Upload state
 const showUploadModal = ref(false);
 const uploadLoading = ref(false);
 const uploadForm = reactive({
@@ -170,25 +167,15 @@ const columns = [
   { title: '答题', dataIndex: ['stats', 'attempts'], width: 70 },
 ];
 
-function difficultyColor(d) {
-  const map = { easy: 'green', medium: 'orange', hard: 'red' };
-  return map[d] || 'default';
-}
+const difficultyMap = { easy: 'green', medium: 'orange', hard: 'red' };
+const difficultyLabelMap = { easy: '简单', medium: '中等', hard: '困难' };
+const statusColorMap = { pending: 'orange', approved: 'green', rejected: 'red' };
+const statusLabelMap = { pending: '待审核', approved: '已通过', rejected: '已拒绝' };
 
-function difficultyLabel(d) {
-  const map = { easy: '简单', medium: '中等', hard: '困难' };
-  return map[d] || d;
-}
-
-function statusColor(s) {
-  const map = { pending: 'orange', approved: 'green', rejected: 'red' };
-  return map[s] || 'default';
-}
-
-function statusLabel(s) {
-  const map = { pending: '待审核', approved: '已通过', rejected: '已拒绝' };
-  return map[s] || s || '-';
-}
+function difficultyColor(d) { return difficultyMap[d] || 'default'; }
+function difficultyLabel(d) { return difficultyLabelMap[d] || d; }
+function statusColor(s) { return statusColorMap[s] || 'default'; }
+function statusLabel(s) { return statusLabelMap[s] || s || '-'; }
 
 function truncate(str, len) {
   if (!str) return '';
@@ -288,10 +275,25 @@ onMounted(() => {
   fetchQuestions();
   fetchCategories();
 });
+
+onBeforeUnmount(() => {
+  clearTimeout(searchTimer);
+});
 </script>
 
 <style scoped>
 .question-list {
   width: 100%;
+}
+
+.question-link {
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.question-link:hover {
+  color: #764ba2;
+  text-decoration: underline;
 }
 </style>

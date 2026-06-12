@@ -1,9 +1,8 @@
 <template>
   <div class="question-detail" v-if="question">
-    <!-- 题目信息 -->
-    <a-card :loading="loading">
+    <a-card>
       <template #title>
-        <a-space>
+        <a-space wrap>
           <a-tag>{{ question.category }}</a-tag>
           <a-tag :color="difficultyColor(question.difficulty)">
             {{ difficultyLabel(question.difficulty) }}
@@ -12,7 +11,7 @@
         </a-space>
       </template>
       <template #extra>
-        <a-space>
+        <a-space wrap>
           <a-button @click="handleFavorite" :type="isFavorite ? 'primary' : 'default'">
             {{ isFavorite ? '已收藏' : '收藏' }}
           </a-button>
@@ -50,7 +49,6 @@
         </template>
       </div>
 
-      <!-- AI 生成答案区域 -->
       <div v-if="showAiAnswer && aiAnswer" class="ai-answer-section">
         <div class="ai-answer-header">
           <a-tag color="purple">AI 生成</a-tag>
@@ -65,13 +63,11 @@
         </a-space>
       </div>
 
-      <!-- 答案池 -->
       <div class="answer-pool-section">
         <div class="answer-pool-header">
           <h3>答案池 <a-tag>{{ answerPool.length }}</a-tag></h3>
         </div>
 
-        <!-- 提交自己的答案 -->
         <div v-if="authStore.isAuthenticated" class="answer-pool-submit">
           <a-textarea
             v-model:value="poolAnswerText"
@@ -93,7 +89,6 @@
           <a-typography-text type="secondary">登录后可提交答案到答案池</a-typography-text>
         </div>
 
-        <!-- 答案列表 -->
         <a-list
           v-if="answerPool.length"
           :data-source="answerPool"
@@ -137,13 +132,11 @@
       </a-descriptions>
     </a-card>
 
-    <!-- 分享图片预览 -->
     <a-modal v-model:open="showShareModal" title="分享题目" :footer="null">
       <img v-if="shareImageUrl" :src="shareImageUrl" alt="分享图片" style="width: 100%" />
       <a-spin v-else />
     </a-modal>
 
-    <!-- 反馈弹窗 -->
     <a-modal
       v-model:open="showFeedbackModal"
       title="提交反馈"
@@ -163,10 +156,7 @@
       </a-form>
     </a-modal>
 
-    <!-- 广告位 -->
     <AdSlot slot="question_detail_bottom" />
-
-    <!-- 打赏 -->
     <DonateButton />
     <DonateWall />
   </div>
@@ -398,10 +388,13 @@ onMounted(() => {
 
 .answer-text {
   white-space: pre-wrap;
+  word-break: break-word;
   line-height: 1.8;
   background: #fafafa;
-  padding: 12px;
+  padding: 16px;
   border-radius: 8px;
+  overflow: visible;
+  max-height: none;
 }
 
 .ai-answer-section {
@@ -421,6 +414,7 @@ onMounted(() => {
 
 .ai-answer-text {
   white-space: pre-wrap;
+  word-break: break-word;
   line-height: 1.8;
   margin-bottom: 12px;
 }
@@ -463,6 +457,7 @@ onMounted(() => {
 
 .pool-answer-text {
   white-space: pre-wrap;
+  word-break: break-word;
   line-height: 1.6;
   color: #333;
   margin-bottom: 4px;

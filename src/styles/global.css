@@ -9,7 +9,6 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
 
-  /* 工具类变量 */
   --page-max-width: 1200px;
   --content-max-width: 800px;
   --spacing-xs: 4px;
@@ -26,10 +25,13 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: var(--bg-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 #app {
@@ -38,80 +40,94 @@ body {
   flex-direction: column;
 }
 
-/* Card */
+* {
+  box-sizing: border-box;
+}
+
 .ant-card {
   border-radius: var(--card-radius) !important;
   border: none !important;
   box-shadow: var(--shadow-sm) !important;
-  transition: box-shadow 0.3s, transform 0.3s;
+  transition: box-shadow 0.3s ease;
 }
 
 .ant-card:hover {
   box-shadow: var(--shadow-md) !important;
 }
 
-/* Primary button gradient */
 .ant-btn-primary {
   background: var(--primary-gradient) !important;
   border: none !important;
   border-radius: var(--btn-radius) !important;
   font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .ant-btn-primary:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-/* Default button */
 .ant-btn-default {
   border-radius: var(--btn-radius) !important;
 }
 
-/* Input */
 .ant-input,
 .ant-input-affix-wrapper,
 .ant-select-selector,
 .ant-picker {
   border-radius: var(--btn-radius) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Tag */
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-select-focused .ant-select-selector {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+}
+
 .ant-tag {
   border-radius: 6px !important;
 }
 
-/* Table */
 .ant-table {
   border-radius: var(--card-radius) !important;
   overflow: hidden;
 }
 
-/* Modal */
+.ant-table-thead > tr > th {
+  background: #fafbfc !important;
+  font-weight: 600;
+  color: #475569;
+}
+
 .ant-modal-content {
   border-radius: var(--card-radius) !important;
 }
 
-/* Menu item transition */
 .ant-menu-item {
-  transition: all 0.3s !important;
+  transition: all 0.2s !important;
 }
 
-/* Statistic card gradient */
-.stat-card-gradient {
-  background: var(--primary-gradient);
-  color: white;
+.ant-pagination .ant-pagination-item-active {
+  border-color: var(--primary-color) !important;
 }
 
-.stat-card-gradient .ant-statistic-title {
-  color: rgba(255, 255, 255, 0.85);
+.ant-pagination .ant-pagination-item-active a {
+  color: var(--primary-color) !important;
 }
 
-.stat-card-gradient .ant-statistic-content {
-  color: white;
+.ant-list-item {
+  transition: background 0.2s ease;
 }
 
-/* 页面容器 */
+.ant-list-item:hover {
+  background: #fafbfc;
+}
+
 .page-container {
   max-width: var(--page-max-width);
   margin: 0 auto;
@@ -122,7 +138,6 @@ body {
   margin: 0 auto;
 }
 
-/* 统一标题样式 */
 .section-title {
   font-size: 18px;
   font-weight: 600;
@@ -130,7 +145,24 @@ body {
   margin-bottom: var(--spacing-lg);
 }
 
-/* 响应式间距 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
 @media (max-width: 768px) {
   .ant-layout-content {
     margin: 12px !important;

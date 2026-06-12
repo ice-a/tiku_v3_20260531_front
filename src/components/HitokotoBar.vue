@@ -1,26 +1,24 @@
 <template>
   <div class="hitokoto-bar" :class="{ compact }">
     <a-spin :spinning="loading && !hitokoto.text">
-      <Transition name="hitokoto-flip" mode="out-in">
-        <div :key="hitokoto.text" class="hitokoto-inner">
-          <div class="quote-icon">"</div>
-          <p class="hitokoto-text">{{ hitokoto.text }}</p>
-          <div class="hitokoto-footer">
-            <span class="hitokoto-source" v-if="hitokoto.from">
-              —— {{ hitokoto.from_who ? hitokoto.from_who + ' ' : '' }}《{{ hitokoto.from }}》
-            </span>
-            <a-button type="link" @click="handleRefresh" :loading="loading" class="refresh-btn">
-              <span class="refresh-icon">↻</span> 换一句
-            </a-button>
-          </div>
+      <div class="hitokoto-inner" :class="{ 'is-transitioning': transitioning }">
+        <div class="quote-icon">"</div>
+        <p class="hitokoto-text">{{ hitokoto.text }}</p>
+        <div class="hitokoto-footer">
+          <span class="hitokoto-source" v-if="hitokoto.from">
+            —— {{ hitokoto.from_who ? hitokoto.from_who + ' ' : '' }}《{{ hitokoto.from }}》
+          </span>
+          <a-button type="link" @click="handleRefresh" :loading="loading" class="refresh-btn">
+            <span class="refresh-icon" :class="{ spinning: loading }">↻</span> 换一句
+          </a-button>
         </div>
-      </Transition>
+      </div>
     </a-spin>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useHitokoto } from '../composables/useHitokoto';
 
 defineProps({
@@ -31,9 +29,13 @@ defineProps({
 });
 
 const { hitokoto, loading, fetchHitokoto } = useHitokoto();
+const transitioning = ref(false);
 
-function handleRefresh() {
-  fetchHitokoto(true);
+async function handleRefresh() {
+  if (loading.value) return;
+  transitioning.value = true;
+  await fetchHitokoto(true);
+  transitioning.value = false;
 }
 
 onMounted(fetchHitokoto);
@@ -62,6 +64,12 @@ onMounted(fetchHitokoto);
 .hitokoto-inner {
   position: relative;
   z-index: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.hitokoto-inner.is-transitioning {
+  opacity: 0.4;
+  transform: scale(0.98);
 }
 
 .quote-icon {
@@ -81,6 +89,7 @@ onMounted(fetchHitokoto);
   text-align: center;
   position: relative;
   z-index: 1;
+  transition: opacity 0.2s ease;
 }
 
 .hitokoto-footer {
@@ -116,50 +125,19 @@ onMounted(fetchHitokoto);
   transition: transform 0.5s ease;
 }
 
-.refresh-btn:hover .refresh-icon {
+.refresh-icon.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+.refresh-btn:hover .refresh-icon:not(.spinning) {
   transform: rotate(360deg);
 }
 
-/* 切换动画：3D 翻转 + 淡入淡出 */
-.hitokoto-flip-enter-active {
-  animation: hitokoto-in 0.6s ease;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.hitokoto-flip-leave-active {
-  animation: hitokoto-out 0.4s ease;
-}
-
-@keyframes hitokoto-in {
-  0% {
-    opacity: 0;
-    transform: rotateX(90deg) scale(0.8);
-    filter: blur(4px);
-  }
-  50% {
-    opacity: 0.8;
-    transform: rotateX(-10deg) scale(1.02);
-    filter: blur(0);
-  }
-  100% {
-    opacity: 1;
-    transform: rotateX(0deg) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes hitokoto-out {
-  0% {
-    opacity: 1;
-    transform: rotateX(0deg) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: rotateX(-90deg) scale(0.8);
-    filter: blur(4px);
-  }
-}
-
-/* compact 模式 */
 .hitokoto-bar.compact {
   padding: 16px 24px;
   border-radius: 12px;

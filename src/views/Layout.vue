@@ -125,12 +125,12 @@ function handleUserMenuClick({ key }) {
   background: #f5f7fa;
 }
 
-/* Header */
 .header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid #e8ecf1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
@@ -147,7 +147,6 @@ function handleUserMenuClick({ key }) {
   box-sizing: border-box;
 }
 
-/* Logo */
 .logo {
   display: flex;
   align-items: center;
@@ -167,6 +166,11 @@ function handleUserMenuClick({ key }) {
   font-weight: 700;
   font-size: 16px;
   border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.logo:hover .logo-icon {
+  transform: scale(1.05);
 }
 
 .logo-text {
@@ -176,18 +180,17 @@ function handleUserMenuClick({ key }) {
   letter-spacing: 0;
 }
 
-/* Navigation */
 .nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 16px;
+  padding: 6px 14px;
   font-size: 14px;
   font-weight: 500;
   color: #64748b;
@@ -208,7 +211,6 @@ function handleUserMenuClick({ key }) {
   font-weight: 600;
 }
 
-/* Right section */
 .header-right {
   flex-shrink: 0;
 }
@@ -296,7 +298,6 @@ function handleUserMenuClick({ key }) {
   transform: translateY(-1px);
 }
 
-/* Content */
 .content {
   flex: 1;
   min-height: 0;
@@ -309,7 +310,6 @@ function handleUserMenuClick({ key }) {
   box-sizing: border-box;
 }
 
-/* Footer */
 .footer {
   display: flex;
   align-items: center;
@@ -328,9 +328,11 @@ function handleUserMenuClick({ key }) {
   color: #2563eb;
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.2s;
 }
 
 .footer-link:hover {
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
@@ -348,10 +350,12 @@ function handleUserMenuClick({ key }) {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .nav-item {
     padding: 6px 10px;
+    font-size: 13px;
   }
 
   .content {
@@ -367,6 +371,10 @@ function handleUserMenuClick({ key }) {
 
   .auth-btns {
     justify-content: flex-end;
+  }
+
+  .username {
+    display: none;
   }
 }
 </style>

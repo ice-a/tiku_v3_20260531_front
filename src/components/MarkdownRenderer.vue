@@ -1,5 +1,5 @@
 <template>
-  <div class="markdown-body" v-html="sanitizedHtml"></div>
+  <div class="markdown-body" v-html="renderedHtml"></div>
 </template>
 
 <script setup>
@@ -14,10 +14,17 @@ const props = defineProps({
   }
 });
 
-const sanitizedHtml = computed(() => {
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
+
+const renderedHtml = computed(() => {
   if (!props.content) return '';
-  const html = marked.parse(props.content);
-  return DOMPurify.sanitize(html);
+  return DOMPurify.sanitize(marked.parse(props.content), {
+    ADD_TAGS: ['code', 'pre', 'span'],
+    ADD_ATTR: ['class'],
+  });
 });
 </script>
 
@@ -25,6 +32,8 @@ const sanitizedHtml = computed(() => {
 .markdown-body {
   line-height: 1.8;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow: visible;
 }
 
 .markdown-body :deep(h1),
@@ -79,6 +88,8 @@ const sanitizedHtml = computed(() => {
   border-collapse: collapse;
   width: 100%;
   margin-bottom: 12px;
+  display: block;
+  overflow-x: auto;
 }
 
 .markdown-body :deep(th),
@@ -86,6 +97,7 @@ const sanitizedHtml = computed(() => {
   border: 1px solid #e8e8e8;
   padding: 8px 12px;
   text-align: left;
+  white-space: nowrap;
 }
 
 .markdown-body :deep(th) {

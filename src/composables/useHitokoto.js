@@ -3,7 +3,10 @@ import { ref } from 'vue';
 const hitokoto = ref({ text: '加载中...', from: '', from_who: '' });
 const loading = ref(false);
 const CACHE_KEY = 'hitokoto_cache';
-const CACHE_TTL = 5 * 60 * 1000; // 5 分钟
+const CACHE_TTL = 5 * 60 * 1000;
+const FETCH_TIMEOUT = 8000;
+
+let currentController = null;
 
 const defaultHitokoto = {
   text: '生活不止眼前的苟且，还有诗和远方。',
@@ -13,19 +16,23 @@ const defaultHitokoto = {
 
 function normalizeHitokoto(payload = {}) {
   const data = payload.data || payload;
-  const hitokoto = data.hitokoto || data;
-  const fromWho = hitokoto.from_who || hitokoto.fromWho || '';
-
+  const h = data.hitokoto || data;
   return {
-    text: hitokoto.text || hitokoto.hitokoto || defaultHitokoto.text,
-    from: hitokoto.from || '',
-    from_who: fromWho,
+    text: h.text || h.hitokoto || defaultHitokoto.text,
+    from: h.from || '',
+    from_who: h.from_who || h.fromWho || '',
   };
+}
+
+function fetchWithTimeout(url, timeout) {
+  const controller = new AbortController();
+  currentController = controller;
+  const timer = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
 }
 
 export function useHitokoto() {
   async function fetchHitokoto(forceRefresh = false) {
-    // 检查缓存
     if (!forceRefresh) {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
@@ -35,23 +42,39 @@ export function useHitokoto() {
             hitokoto.value = data;
             return;
           }
-        } catch {}
+        } catch { /* ignore corrupted cache */ }
       }
+    }
+
+    if (currentController) {
+      currentController.abort();
     }
 
     loading.value = true;
     try {
-      const res = await fetch(`/api/hitokoto${forceRefresh ? '?refresh=1' : ''}`);
-      if (res.ok === false) throw new Error(`Hitokoto request failed (${res.status})`);
-
+      const res = await fetchWithTimeout(
+        `/api/hitokoto${forceRefresh ? '?refresh=1' : ''}`,
+        FETCH_TIMEOUT,
+      );
+      if (!res.ok) throw new Error(`Hitokoto request failed (${res.status})`);
       hitokoto.value = normalizeHitokoto(await res.json());
-      // 保存缓存
       localStorage.setItem(CACHE_KEY, JSON.stringify({
         data: hitokoto.value,
         timestamp: Date.now(),
       }));
-    } catch {
-      hitokoto.value = defaultHitokoto;
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          try {
+            hitokoto.value = JSON.parse(cached).data;
+          } catch {
+            hitokoto.value = defaultHitokoto;
+          }
+        } else {
+          hitokoto.value = defaultHitokoto;
+        }
+      }
     } finally {
       loading.value = false;
     }

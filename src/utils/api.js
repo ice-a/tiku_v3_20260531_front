@@ -5,6 +5,7 @@ const PUBLIC_AUTH_PATHS = new Set([
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/github/login',
+  '/api/hitokoto',
 ]);
 
 function getToken() {
