@@ -13,11 +13,12 @@ const defaultHitokoto = {
 
 function normalizeHitokoto(payload = {}) {
   const data = payload.data || payload;
-  const fromWho = data.from_who || data.fromWho || '';
+  const hitokoto = data.hitokoto || data;
+  const fromWho = hitokoto.from_who || hitokoto.fromWho || '';
 
   return {
-    text: data.text || data.hitokoto || defaultHitokoto.text,
-    from: data.from || '',
+    text: hitokoto.text || hitokoto.hitokoto || defaultHitokoto.text,
+    from: hitokoto.from || '',
     from_who: fromWho,
   };
 }
