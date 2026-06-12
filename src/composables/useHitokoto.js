@@ -7,6 +7,7 @@ const CACHE_TTL = 5 * 60 * 1000;
 const FETCH_TIMEOUT = 8000;
 
 let currentController = null;
+let fetchCount = 0;
 
 const defaultHitokoto = {
   text: '生活不止眼前的苟且，还有诗和远方。',
@@ -28,7 +29,10 @@ function fetchWithTimeout(url, timeout) {
   const controller = new AbortController();
   currentController = controller;
   const timer = setTimeout(() => controller.abort(), timeout);
-  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+  return fetch(url, {
+    signal: controller.signal,
+    cache: 'no-store',
+  }).finally(() => clearTimeout(timer));
 }
 
 export function useHitokoto() {
@@ -50,20 +54,23 @@ export function useHitokoto() {
       currentController.abort();
     }
 
+    const myFetchCount = ++fetchCount;
     loading.value = true;
     try {
       const res = await fetchWithTimeout(
-        `/api/hitokoto${forceRefresh ? '?refresh=1' : ''}`,
+        `/api/hitokoto${forceRefresh ? '?refresh=1&t=' + Date.now() : ''}`,
         FETCH_TIMEOUT,
       );
       if (!res.ok) throw new Error(`Hitokoto request failed (${res.status})`);
-      hitokoto.value = normalizeHitokoto(await res.json());
+      const data = normalizeHitokoto(await res.json());
+      if (fetchCount !== myFetchCount) return;
+      hitokoto.value = data;
       localStorage.setItem(CACHE_KEY, JSON.stringify({
         data: hitokoto.value,
         timestamp: Date.now(),
       }));
     } catch (err) {
-      if (err.name !== 'AbortError') {
+      if (err.name !== 'AbortError' && fetchCount === myFetchCount) {
         const cached = localStorage.getItem(CACHE_KEY);
         if (cached) {
           try {
@@ -76,7 +83,9 @@ export function useHitokoto() {
         }
       }
     } finally {
-      loading.value = false;
+      if (fetchCount === myFetchCount) {
+        loading.value = false;
+      }
     }
   }
 
